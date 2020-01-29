@@ -1,7 +1,23 @@
 var express = require('express');
 var app = express();
 var exphbs  = require('express-handlebars');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+
+//connect to mongoose
+mongoose.connect('mongodb://localhost:27017/gamelibrary',{
+    useNewUrlParser:true,
+    useUnifiedTopology:true
+}).then(function(){
+    console.log('mongodb connected');
+}).catch(function(err){
+    console.log(err);
+});
+
+//load game model
+require('./models/Game');
+var Game = mongoose.model('games');
+
 
 //this code sets up template engine as express handlebars
 app.engine('handlebars', exphbs({defaultLayout:'main'}));
@@ -31,7 +47,33 @@ app.get('/gameentry/gameentryadd', function(req, res){
 //Post Requests
 app.post('/gameentry',function(req,res){
     console.log(req.body);
-    res.send(req.body);
+    var errors = [];
+
+    if(!req.body.title){
+        errors.push({text:'please add a title'});
+    }
+    if(!req.body.price){
+        errors.push({text:'please add a price'});
+    }
+    if(!req.body.description){
+        errors.push({text:'please add a description'});
+    }
+
+    if(errors.length > 0){
+        res.render('gameentry/gameentryadd',{
+            errors:errors,
+            title:req.body.title,
+            price:req.body.price,
+            description:req.body.description
+        });
+    }
+    else{
+        //Send info to database
+        res.send(req.body);
+    }
+
+
+    //res.send(req.body);
 });
 
 app.listen(5000, function(){
