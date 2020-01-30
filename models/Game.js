@@ -3,13 +3,13 @@ var Schema = mongoose.Schema;
 
 var GameSchema = new Schema({
     title:{
-        title:String
+        type:String
     },
     price:{
-        price:Number
+        type:Number
     },
     description:{
-        description:String
+        type:String
     }
 });
 

@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var exphbs  = require('express-handlebars');
+var methodOverride = require('method-override')
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 
@@ -18,6 +19,8 @@ mongoose.connect('mongodb://localhost:27017/gamelibrary',{
 require('./models/Game');
 var Game = mongoose.model('games');
 
+//require method override
+app.use(methodOverride('_method'));
 
 //this code sets up template engine as express handlebars
 app.engine('handlebars', exphbs({defaultLayout:'main'}));
@@ -40,8 +43,29 @@ app.get('/about', function(req, res){
     res.render('about');
 });
 
+app.get('/games', function(req, res){
+    Game.find({}).then(function(games){
+        console.log("Fetch Route ");
+        console.log(games);
+        res.render('gameentry/index',{
+            games:games
+        });
+    });
+    
+});
+
 app.get('/gameentry/gameentryadd', function(req, res){
     res.render('gameentry/gameentryadd');
+});
+
+app.get('/gameentry/gameentryedit/:id', function(req, res){
+    Game.findOne({
+        _id:req.params.id
+    }).then(function(game){
+        res.render('gameentry/gameentryedit',{
+            game:game
+        });
+    })
 });
 
 //Post Requests
@@ -69,11 +93,35 @@ app.post('/gameentry',function(req,res){
     }
     else{
         //Send info to database
-        res.send(req.body);
+       // res.send(req.body);
+       var newUser = {
+            title:req.body.title,
+            price:req.body.price,
+            description:req.body.description
+       }
+        new Game(newUser).save().then(function(games){
+           
+           res.redirect('/games');
+       });
     }
 
 
     //res.send(req.body);
+});
+
+app.put('/gameedit/:id', function(req,res){
+    Game.findOne({
+        _id:req.params.id
+    }).then(function(game){
+        game.title = req.body.title
+        game.price = req.body.price
+        game.description = req.body.description
+
+        game.save().then(function(game){
+            res.redirect('/games');
+        });
+
+    });
 });
 
 app.listen(5000, function(){
