@@ -1,9 +1,9 @@
 <h1>Edit Games</h1>
 
 <div class="card card-body">
-    <form action="/gameedit/{{game.id}}?_method=PUT" method="POST">
+    <form action="/game/gameedit/{{game.id}}?_method=PUT" method="POST">
         <div class="form-group">
-            
+             
             <label for="title">Title of Game</label>
             <input type='hidden' name="_method" value="PUT">
             <input type="text" name="title" class='form-control' value='{{game.title}}' required>
