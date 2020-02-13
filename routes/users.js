@@ -1,6 +1,7 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var bcrypt = require('bcryptjs');
+var passport = require('passport');
 var router = express.Router();
 
 //load game model
@@ -14,6 +15,16 @@ router.get('/login', function(req,res){
 
 router.get('/register', function(req,res){
     res.render("users/register");
+});
+
+//post routes
+
+router.post('/login', function(req,res,next){
+    passport.authenticate('local', {
+        successRedirect:'/game/games',
+        failureRedirect:'/users/login',
+        failureFlash: true
+    })(req,res,next);
 });
 
 router.post('/register', function(req,res){
@@ -56,6 +67,12 @@ router.post('/register', function(req,res){
 
         
     }
+});
+
+router.get('/logout', function(req,res){
+    req.logout();
+    req.flash("success_msg", "You successfully logged out");
+    res.redirect('/users/login');
 });
 
 module.exports = router;

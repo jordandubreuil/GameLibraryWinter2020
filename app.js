@@ -5,14 +5,20 @@ var methodOverride = require('method-override');
 var session = require('express-session');
 var flash = require('connect-flash');
 var bodyParser = require('body-parser');
+var passport = require('passport');
 var mongoose = require('mongoose');
+var db = require('./helper/database');
 
 //load routes
 var games = require('./routes/games');
 var users = require('./routes/users');
 
+//load passport
+require('./config/passport')(passport);
+
+
 //connect to mongoose
-mongoose.connect('mongodb://localhost:27017/gamelibrary',{
+mongoose.connect(db.mongoURI ,{
     useNewUrlParser:true,
     useUnifiedTopology:true
 }).then(function(){
@@ -42,6 +48,10 @@ app.use(session({
     saveUninitialized:true
 }));
 
+//initializes passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 //Setup for flash messaging
 app.use(flash());
 
@@ -50,6 +60,7 @@ app.use(function(req,res,next){
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
     res.locals.error = req.flash('error');
+    res.locals.user = req.user || null;
     next();
 });
 
@@ -70,7 +81,9 @@ app.use('/game', games);
 app.use('/users', users);
 
 //connects server to port
+var port = process.env.PORT || 5000;
+ 
 
-app.listen(5000, function(){
+app.listen(port, function(){
     console.log("Game Library running on port 5000");
 });

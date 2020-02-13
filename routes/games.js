@@ -1,6 +1,7 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var router = express.Router();
+var {ensureAuthenticated} = require("../helper/auth")
 
 //load game model
 require('../models/Game');
@@ -8,8 +9,8 @@ var Game = mongoose.model('games');
 
 //Game Entry CRUD route
 
-router.get('/games', function(req, res){
-    Game.find({}).then(function(games){
+router.get('/games', ensureAuthenticated , function(req, res){
+    Game.find({user:req.user.id}).then(function(games){
         console.log("Fetch Route ");
         console.log(games);
         res.render('gameentry/index',{
@@ -19,22 +20,30 @@ router.get('/games', function(req, res){
     
 });
 
-router.get('/gameentry/gameentryadd', function(req, res){
+router.get('/gameentry/gameentryadd', ensureAuthenticated, function(req, res){
     res.render('gameentry/gameentryadd');
 });
 
-router.get('/gameentry/gameentryedit/:id', function(req, res){
+router.get('/gameentry/gameentryedit/:id', ensureAuthenticated , function(req, res){
     Game.findOne({
         _id:req.params.id
     }).then(function(game){
-        res.render('gameentry/gameentryedit',{
-            game:game
-        });
+
+        if(game.user != req.user.id){
+            req.flash('error_msg', 'Not Authorized');
+            res.redirect('/game/games');
+        }
+        else{
+           res.render('gameentry/gameentryedit',{
+                 game:game
+            }); 
+        }
+        
     })
 });
 
 //Post Requests
-router.post('/gameentry',function(req,res){
+router.post('/gameentry', ensureAuthenticated ,function(req,res){
     console.log(req.body);
     var errors = [];
 
@@ -62,7 +71,8 @@ router.post('/gameentry',function(req,res){
        var newUser = {
             title:req.body.title,
             price:req.body.price,
-            description:req.body.description
+            description:req.body.description,
+            user:req.user.id
        }
         new Game(newUser).save().then(function(games){
            //Saves game and redirects to game page
@@ -75,7 +85,7 @@ router.post('/gameentry',function(req,res){
     //res.send(req.body);
 });
 
-router.put('/gameedit/:id', function(req,res){
+router.put('/gameedit/:id', ensureAuthenticated , function(req,res){
     Game.findOne({
         _id:req.params.id
     }).then(function(game){
@@ -91,7 +101,7 @@ router.put('/gameedit/:id', function(req,res){
     });
 });
 
-router.delete('/gamedelete/:id', function(req,res){
+router.delete('/gamedelete/:id', ensureAuthenticated, function(req,res){
     Game.deleteOne({
         _id:req.params.id
     }).then(function(){
